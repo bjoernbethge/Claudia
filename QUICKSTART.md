@@ -85,7 +85,7 @@ description: Testing patterns for this project. Use when writing or modifying te
 - Follow AAA: Arrange, Act, Assert
 
 ## Example
-\`\`\`typescript
+```typescript
 describe('MyComponent', () => {
   it('renders correctly', () => {
     // Arrange
@@ -98,7 +98,7 @@ describe('MyComponent', () => {
     expect(getByText('Test')).toBeInTheDocument();
   });
 });
-\`\`\`
+```
 ```
 
 ## Step 5: Test It Out
