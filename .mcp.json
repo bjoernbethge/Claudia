@@ -82,6 +82,16 @@
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@anthropic/mcp-memory"]
+    },
+
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"],
+      "env": {
+        "PLAYWRIGHT_HEADLESS": "${PLAYWRIGHT_HEADLESS:-true}",
+        "PLAYWRIGHT_BROWSER": "${PLAYWRIGHT_BROWSER:-chromium}"
+      }
     }
   }
 }

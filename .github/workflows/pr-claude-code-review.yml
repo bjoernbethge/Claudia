@@ -62,7 +62,15 @@ jobs:
             echo "base_ref=$BASE_REF" >> $GITHUB_OUTPUT
           fi
 
-      - name: Claude Code Review
+      - name: Setup Python for Serena
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Serena
+        run: pip install serena-agent
+
+      - name: Claude Code Review with MCP
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -70,12 +78,108 @@ jobs:
           timeout_minutes: 30
           track_progress: true
           prompt: |
-            Review this Pull Request using the standards in .claude/agents/code-reviewer.md
+            # Pull Request Code Review with Enhanced Tools
 
-            1. Read .claude/agents/code-reviewer.md for the full checklist
-            2. Run `git diff origin/${{ steps.pr-info.outputs.base_ref }}...HEAD` to see changes
-            3. Apply the review checklist to modified files
-            4. Provide feedback organized by severity (Critical, Warning, Suggestion)
+            You are reviewing this Pull Request with access to advanced MCP tools:
+            - **Serena**: For deep code analysis and pattern detection
+            - **Context7**: For up-to-date framework/library documentation
+            - **GitHub**: For PR information and commenting
+
+            ## Review Process
+
+            ### 1. Read Review Standards
+            Read `.claude/agents/code-reviewer.md` for the complete review checklist.
+
+            ### 2. Analyze Changes
+            ```bash
+            # Get PR diff
+            git diff origin/${{ steps.pr-info.outputs.base_ref }}...HEAD
+
+            # Get changed files list
+            git diff --name-only origin/${{ steps.pr-info.outputs.base_ref }}...HEAD
+            ```
+
+            ### 3. Use Serena for Deep Analysis
+            - Analyze code quality patterns in changed files
+            - Identify potential issues and anti-patterns
+            - Get recommendations for improvements
+            - Check for code smells and technical debt
+
+            ### 4. Use Context7 for Best Practices
+            When reviewing specific technologies:
+            - React code → Query Context7 for latest React patterns
+            - TypeScript → Check TypeScript best practices
+            - Libraries used → Get current documentation and usage patterns
+            - Security concerns → Reference OWASP guidelines
+
+            ### 5. Apply Review Checklist
+            For each changed file, verify:
+
+            **TypeScript Quality**:
+            - [ ] No `any` types without justification
+            - [ ] Proper type narrowing and guards
+            - [ ] Interface definitions for complex objects
+            - [ ] Generic types used appropriately
+
+            **React Patterns** (if applicable):
+            - [ ] Hooks used correctly (no violations of rules)
+            - [ ] Proper dependency arrays
+            - [ ] Appropriate memoization (not over-used)
+            - [ ] Loading/error/empty states handled
+
+            **Security**:
+            - [ ] User input sanitized
+            - [ ] No injection vulnerabilities
+            - [ ] Authentication/authorization checked
+            - [ ] Sensitive data not exposed
+
+            **Testing**:
+            - [ ] Tests included for new features
+            - [ ] Edge cases covered
+            - [ ] Tests follow TDD patterns
+
+            ### 6. Provide Structured Feedback
+
+            Post review comment organized by severity:
+
+            **🔴 Critical Issues** (must fix before merge):
+            - Security vulnerabilities
+            - Breaking changes
+            - Data loss risks
+
+            **🟡 Warnings** (should fix):
+            - Type errors
+            - Poor error handling
+            - Performance issues
+            - Missing tests
+
+            **🟢 Suggestions** (nice to have):
+            - Code style improvements
+            - Better naming
+            - Refactoring opportunities
+
+            **✅ Positive Notes**:
+            - Good patterns used
+            - Well-tested code
+            - Clear documentation
+
+            ### 7. Add Specific File Comments
+            For critical/warning issues, use:
+            ```bash
+            gh pr comment ${{ github.event.pull_request.number || github.event.issue.number }} --body "<feedback>"
+            ```
+
+            ## Guidelines
+            - Be constructive and helpful
+            - Reference specific lines/files
+            - Explain WHY something is an issue
+            - Suggest concrete fixes
+            - Use MCP tools to back up recommendations
+            - Focus on objective quality, not subjective style
           claude_args: |
-            --max-turns 10
-            --allowedTools "Read,Glob,Grep,Bash(git:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --max-turns 15
+            --allowedTools "Read,Glob,Grep,Bash(git:*),Bash(gh:*)"
+        env:
+          SERENA_API_KEY: ${{ secrets.SERENA_API_KEY }}
+          SERENA_HOST: ${{ secrets.SERENA_HOST || 'http://localhost:8384' }}
+          CONTEXT7_API_KEY: ${{ secrets.CONTEXT7_API_KEY }}

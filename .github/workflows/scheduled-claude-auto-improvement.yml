@@ -1,0 +1,228 @@
+name: Scheduled - Auto Improvement
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      focus_area:
+        description: 'Focus area for improvement (docs, tests, performance, security, types)'
+        required: false
+        default: 'auto'
+      create_pr:
+        description: 'Create PR for improvements'
+        required: false
+        default: 'true'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  analyze-and-improve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Python for Serena
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Serena
+        run: pip install serena-agent
+
+      - name: Generate branch name
+        id: branch
+        run: |
+          FOCUS="${{ github.event.inputs.focus_area || 'auto' }}"
+          BRANCH_NAME="claude/auto-improvement-${FOCUS}-$(date +%Y%m%d-%H%M)"
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Claude Auto Improvement
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: claude-opus-4-5-20251101
+          timeout_minutes: 60
+          base_branch: main
+          branch_prefix: claude/auto-improvement-
+          track_progress: true
+          prompt: |
+            # Weekly Auto-Improvement Task
+
+            You are an autonomous code improvement agent. Your goal is to analyze the codebase, identify improvement opportunities, and implement fixes.
+
+            ## Available Tools & Integrations
+
+            You have access to:
+            - **Serena MCP**: Code analysis and review insights
+            - **Context7 MCP**: Up-to-date documentation for libraries/frameworks
+            - **Ollama**: Local LLM for duplicate detection and code analysis
+            - **Standard tools**: Read, Write, Edit, Glob, Grep, Bash
+
+            ## Focus Area
+            **${{ github.event.inputs.focus_area || 'Auto-detect based on recent changes' }}**
+
+            ## Your Mission
+
+            ### Step 1: Analyze Recent Changes
+            ```bash
+            # Get recent commits to identify active areas
+            git log --since="7 days ago" --name-only --pretty=format: | sort -u
+
+            # Identify frequently changed files
+            git log --since="30 days ago" --format=format: --name-only | sort | uniq -c | sort -rn | head -20
+            ```
+
+            ### Step 2: Use Serena for Code Review Insights
+            - Use Serena MCP to analyze code quality patterns
+            - Identify common issues across the codebase
+            - Get recommendations for improvements
+            - Focus on frequently changed files (they need the most attention)
+
+            ### Step 3: Determine Focus Area (if auto)
+            Based on analysis, choose one focus area:
+            - **Documentation**: Missing/outdated docs, unclear function descriptions
+            - **Tests**: Low coverage, missing edge cases, brittle tests
+            - **Performance**: Unnecessary re-renders, large bundles, slow queries
+            - **Security**: Input validation, authentication issues, XSS/injection risks
+            - **Types**: TypeScript any types, missing interfaces, poor type safety
+            - **Code Quality**: Duplicate code, complex functions, poor naming
+
+            ### Step 4: Use Context7 for Reference
+            For the chosen focus area:
+            - Use Context7 to get latest best practices
+            - Look up documentation for key libraries (React, TypeScript, etc.)
+            - Reference current patterns and recommended approaches
+
+            ### Step 5: Implement Improvements
+            Based on your analysis:
+
+            **For Documentation**:
+            - Add JSDoc comments to complex functions
+            - Update README if outdated
+            - Add inline comments for non-obvious logic
+
+            **For Tests**:
+            - Add missing test cases
+            - Improve test descriptions
+            - Add edge case coverage
+            - Fix brittle tests
+
+            **For Performance**:
+            - Add React.memo where beneficial
+            - Optimize expensive calculations with useMemo
+            - Implement virtualization for long lists
+            - Code-split large bundles
+
+            **For Security**:
+            - Add input sanitization
+            - Fix potential XSS vulnerabilities
+            - Validate API inputs
+            - Remove hardcoded secrets
+
+            **For Types**:
+            - Replace `any` with proper types
+            - Add missing interface definitions
+            - Improve type narrowing
+            - Fix implicit any
+
+            **For Code Quality**:
+            - Extract duplicate code into utilities
+            - Simplify complex functions
+            - Improve variable naming
+            - Reduce nesting levels
+
+            ### Step 6: Verify Changes
+            Run checks to ensure improvements don't break anything:
+            ```bash
+            npm run lint
+            npm run typecheck
+            npm test
+            ```
+
+            Fix any issues before proceeding.
+
+            ### Step 7: Create PR (if improvements made)
+            If you made improvements:
+            - Commit with format: `chore(improvement): <focus-area> - <brief description>`
+            - Create PR with detailed description of improvements
+            - Include metrics (files changed, issues fixed, etc.)
+            - Add appropriate labels
+
+            ## Guidelines
+
+            - **Be autonomous**: Don't ask for permission, make improvements
+            - **Be conservative**: Only change what clearly needs improvement
+            - **Be thorough**: Test changes before committing
+            - **Be focused**: Stick to one area, don't try to fix everything
+            - **Use MCP tools**: Leverage Serena and Context7 for better insights
+            - **Document reasoning**: Explain why each change improves the code
+
+            ## Success Criteria
+
+            - At least 5 meaningful improvements made
+            - All checks passing (lint, types, tests)
+            - Clear PR description with rationale
+            - No breaking changes introduced
+
+            If no improvements are needed, create an issue documenting that the codebase is in good shape.
+          claude_args: |
+            --max-turns 50
+            --allowedTools "Read,Write,Edit,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(npm:*),Bash(npx:*)"
+        env:
+          SERENA_API_KEY: ${{ secrets.SERENA_API_KEY }}
+          SERENA_HOST: ${{ secrets.SERENA_HOST || 'http://localhost:8384' }}
+          CONTEXT7_API_KEY: ${{ secrets.CONTEXT7_API_KEY }}
+          OLLAMA_HOST: http://localhost:11434
+
+      - name: Summary Report
+        if: always()
+        run: |
+          echo "## Auto-Improvement Run Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Focus Area**: ${{ github.event.inputs.focus_area || 'Auto-detect' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check for PRs or issues created by this workflow." >> $GITHUB_STEP_SUMMARY
+
+  notify-on-failure:
+    needs: analyze-and-improve
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue on failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🤖 Auto-improvement workflow failed',
+              body: `The weekly auto-improvement workflow failed.
+
+            **Workflow Run**: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+            **Branch**: \`${{ steps.branch.outputs.name }}\`
+
+            Please investigate and fix the issue.`,
+              labels: ['automation', 'bug']
+            })
