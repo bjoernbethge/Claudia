@@ -5,7 +5,10 @@
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers-contrib/features/curl-apt-get:1": {}
+    "ghcr.io/devcontainers-contrib/features/curl-apt-get:1": {},
+    "ghcr.io/devcontainers-contrib/features/playwright:1": {
+      "browsers": "chromium"
+    }
   },
   "forwardPorts": [3000, 8080, 8081, 8384, 11434],
   "portsAttributes": {
@@ -45,7 +48,8 @@
         "eamodio.gitlens",
         "bradlc.vscode-tailwindcss",
         "ZixuanChen.vitest-explorer",
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "ms-playwright.playwright"
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -84,7 +88,9 @@
     "NODE_ENV": "development",
     "OLLAMA_HOST": "http://localhost:11434",
     "SEARXNG_HOST": "http://localhost:8080",
-    "SURREALDB_HOST": "http://localhost:8081"
+    "SURREALDB_HOST": "http://localhost:8081",
+    "PLAYWRIGHT_HEADLESS": "true",
+    "PLAYWRIGHT_BROWSER": "chromium"
   },
   "containerEnv": {
     "TZ": "UTC"
