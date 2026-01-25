@@ -27,6 +27,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "mcp__duckdb__query_write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Warn about DuckDB write operations\necho '{\"feedback\": \"DuckDB write operation requested. Proceeding with caution.\"}' >&2",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUse": [

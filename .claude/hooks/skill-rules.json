@@ -349,6 +349,24 @@
         "contentPatterns": ["React.memo", "useMemo", "useCallback", "lazy\\(", "Suspense"]
       },
       "relatedSkills": ["react-ui-patterns", "systematic-debugging"]
+    },
+    "duckdb-analytics": {
+      "description": "DuckDB analytics with Query.Farm extensions for SQL queries, web APIs, shell commands, and vector search",
+      "priority": 8,
+      "triggers": {
+        "keywords": ["duckdb", "sql", "query", "analytics", "aggregate", "embedding", "vector search", "h3", "geospatial"],
+        "keywordPatterns": ["\\bduckdb\\b", "\\bsql\\b", "\\bquery\\b", "\\banalytics\\b", "\\bembedding\\b"],
+        "pathPatterns": ["**/*.sql", "**/duckdb/**"],
+        "intentPatterns": [
+          "(?:analyze|query|fetch|aggregate).*(?:data|api|web|table)",
+          "(?:run|execute).*(?:sql|query)",
+          "(?:read|get).*(?:shell|command).*(?:output|result)",
+          "(?:approximate|approx).*(?:count|distinct)",
+          "(?:vector|embedding).*(?:search|similarity)"
+        ],
+        "contentPatterns": ["SELECT", "FROM", "WHERE", "GROUP BY", "http_get", "read_csv"]
+      },
+      "relatedSkills": ["systematic-debugging"]
     }
   }
 }

@@ -1,0 +1,20 @@
+[project]
+name = "claudia-duckdb-mcp"
+version = "0.1.0"
+description = "DuckDB MCP Server with Query.Farm Extensions for Claudia"
+requires-python = ">=3.11"
+dependencies = [
+    "duckdb>=1.1.0",
+    "mcp>=1.0.0",
+    "pydantic>=2.0",
+]
+
+[project.scripts]
+duckdb-mcp = "duckdb_server.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["duckdb_server"]

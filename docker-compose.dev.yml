@@ -38,6 +38,61 @@ services:
       timeout: 10s
       retries: 3
 
+  # DuckDB - Analytical Database with Query.Farm Extensions
+  duckdb:
+    image: python:3.12-slim
+    container_name: claudia-duckdb
+    ports:
+      - "9999:9999"    # HTTP API (if httpserver extension is used)
+    volumes:
+      - duckdb-data:/data
+      - ./duckdb:/app/duckdb:ro
+    working_dir: /app
+    command: >
+      bash -c "
+        pip install --quiet duckdb httpx uvicorn fastapi &&
+        python -c \"
+import duckdb
+import os
+
+db_path = '/data/claudia.db'
+conn = duckdb.connect(db_path)
+
+# Run init script
+with open('/app/duckdb/init.sql', 'r') as f:
+    for statement in f.read().split(';'):
+        statement = statement.strip()
+        if statement:
+            try:
+                conn.execute(statement)
+            except Exception as e:
+                print(f'Warning: {e}')
+
+print(f'DuckDB initialized at {db_path}')
+
+# List loaded extensions
+result = conn.execute('SELECT extension_name, loaded FROM duckdb_extensions() WHERE loaded = true').fetchall()
+print(f'Loaded extensions: {[r[0] for r in result]}')
+
+conn.close()
+
+# Keep container running
+import time
+while True:
+    time.sleep(3600)
+\"
+      "
+    environment:
+      - DUCKDB_DATABASE=/data/claudia.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import duckdb; duckdb.connect('/data/claudia.db').execute('SELECT 1')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - default
+
   # SurrealDB - Multi-model database
   surrealdb:
     image: surrealdb/surrealdb:latest
@@ -64,6 +119,8 @@ volumes:
   searxng-data:
     driver: local
   surrealdb-data:
+    driver: local
+  duckdb-data:
     driver: local
 
 networks:

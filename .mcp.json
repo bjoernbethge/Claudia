@@ -1,83 +1,5 @@
 {
   "mcpServers": {
-    "github": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@anthropic/mcp-github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
-      }
-    },
-
-    "serena": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": ["--from", "serena-agent", "serena", "--host", "${SERENA_HOST:-http://localhost:8384}"],
-      "env": {
-        "SERENA_API_KEY": "${SERENA_API_KEY}"
-      }
-    },
-
-    "context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"],
-      "env": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
-      }
-    },
-
-    "surrealdb": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "surrealdb-mcp"],
-      "env": {
-        "SURREALDB_URL": "${SURREALDB_URL:-http://localhost:8081}",
-        "SURREALDB_USER": "${SURREALDB_USER:-root}",
-        "SURREALDB_PASS": "${SURREALDB_PASS:-root}",
-        "SURREALDB_NS": "${SURREALDB_NS:-claudia}",
-        "SURREALDB_DB": "${SURREALDB_DB:-main}"
-      }
-    },
-
-    "searxng": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@anthropic/mcp-web-search"],
-      "env": {
-        "SEARXNG_URL": "${SEARXNG_URL:-http://localhost:8080}"
-      }
-    },
-
-    "ollama": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "ollama-mcp"],
-      "env": {
-        "OLLAMA_HOST": "${OLLAMA_HOST:-http://localhost:11434}"
-      }
-    },
-
-    "sentry": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@anthropic/mcp-sentry"],
-      "env": {
-        "SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}",
-        "SENTRY_ORG": "${SENTRY_ORG}"
-      }
-    },
-
-    "slack": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@anthropic/mcp-slack"],
-      "env": {
-        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
-        "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
-      }
-    },
-
     "memory": {
       "type": "stdio",
       "command": "npx",
@@ -91,6 +13,22 @@
       "env": {
         "PLAYWRIGHT_HEADLESS": "${PLAYWRIGHT_HEADLESS:-true}",
         "PLAYWRIGHT_BROWSER": "${PLAYWRIGHT_BROWSER:-chromium}"
+      }
+    },
+
+    "duckdb": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "D:/projects/Claudia/src/mcp/duckdb_server",
+        "python",
+        "-m",
+        "duckdb_server.server"
+      ],
+      "env": {
+        "DUCKDB_PATH": "D:/projects/Claudia/data/claudia.db"
       }
     }
   }

@@ -15,6 +15,8 @@
 - `src/hooks/` - Custom React hooks
 - `src/utils/` - Utility functions
 - `src/api/` - API client code
+- `src/mcp/` - MCP server implementations
+- `duckdb/` - DuckDB init scripts and examples
 - `tests/` - Test files
 
 ## Code Style
@@ -64,6 +66,7 @@ Before implementing ANY task, check if relevant skills apply:
 - GraphQL operations → `graphql-schema` skill
 - Debugging issues → `systematic-debugging` skill
 - UI components → `react-ui-patterns` skill
+- SQL/Analytics/DuckDB → `duckdb-analytics` skill
 
 ## Common Commands
 
@@ -74,7 +77,18 @@ npm test             # Run tests
 npm run lint         # Run linter
 npm run typecheck    # Check types
 
+# Docker Services
+docker compose -f docker-compose.dev.yml up -d         # Start all services
+docker compose -f docker-compose.dev.yml up duckdb -d  # Start DuckDB only
+
 # Git
 npm run commit       # Interactive commit
 gh pr create         # Create PR
 ```
+
+## MCP Server Development
+
+- MCP servers in `src/mcp/<server_name>/` with `pyproject.toml` + `server.py`
+- Use `uv sync` to install dependencies, `uv run python -m <module>` to run
+- In `.mcp.json`: use absolute paths, not `${CLAUDE_PROJECT_DIR}` (doesn't resolve on Windows)
+- Test MCP module loads: `uv run python -c "from module.server import mcp; print('OK')"`
